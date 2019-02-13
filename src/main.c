@@ -6,7 +6,7 @@
 
 #include <switch.h>
 
-int main() {
+int main(int argc, char **argv) {
     consoleInit(NULL);
 
     printf("Hello World!\n");
