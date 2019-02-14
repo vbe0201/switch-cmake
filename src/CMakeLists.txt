@@ -1,6 +1,6 @@
 set(homebrew_SOURCE_DIR "${PROJECT_SOURCE_DIR}/src")
 
-file(GLOB kscript_SOURCE_FILES RELATIVE "${homebrew_SOURCE_DIR}"
+file(GLOB homebrew_SOURCE_FILES RELATIVE "${homebrew_SOURCE_DIR}"
         "*.c"
         "*.cc"
         "*.cpp"
