@@ -1,6 +1,6 @@
-set(homebrew_SOURCE_DIR "${PROJECT_SOURCE_DIR}/src")
+set(SOURCE_DIR ${PROJECT_SOURCE_DIR}/src)
 
-file(GLOB homebrew_SOURCE_FILES RELATIVE "${homebrew_SOURCE_DIR}"
+file(GLOB SOURCE_FILES RELATIVE ${SOURCE_DIR}
         "*.c"
         "*.cc"
         "*.cpp"
@@ -8,10 +8,10 @@ file(GLOB homebrew_SOURCE_FILES RELATIVE "${homebrew_SOURCE_DIR}"
         "*.hpp")
 
 if (cmake_VERBOSE)
-    list(LENGTH homebrew_SOURCE_FILES homebrew_SOURCE_FILES_LENGTH)
+    list(LENGTH SOURCE_FILES SOURCE_FILES_LENGTH)
 
-    kscript_info("Loaded ${source_files_length} file(s).")
+    cmake_info("Loaded ${SOURCE_FILES_LENGTH} source file(s)")
 endif ()
 
-add_executable("${target}.elf"
-        src/main.c)
+add_executable(${HOMEBREW_APP}.elf
+        ${SOURCE_DIR}/main.cc)

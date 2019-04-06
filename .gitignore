@@ -27,6 +27,7 @@
 *.lib
 
 # Executables
+*.elf
 *.exe
 *.app
 ### C template
@@ -43,7 +44,6 @@
 *.so.*
 
 # Executables
-*.nro
 *.i*86
 *.x86_64
 *.hex
@@ -74,6 +74,9 @@ Makefile
 bin/
 *.nacp
 *.cbp
+*.pfs0
+*.nro
+*.nso
 
 ### File patterns of common C++ IDEs
 cmake/.idea
@@ -81,4 +84,4 @@ cmake/cmake-build-debug/
 .build/
 _build/
 .vs
-.idea
+.idea/
