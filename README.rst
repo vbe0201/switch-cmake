@@ -127,7 +127,7 @@ Troubleshooting
 ###############
 
 Why does CLion refuse to load up my CMakeLists.txt?
----------------------------------------------------
+...................................................
 
 Navigate to ``Settings > Build, Execution, Deployment > CMake`` and add your toolchain file to ``CMake options``.
 
