@@ -1,5 +1,5 @@
 if (NOT DEFINED ENV{DEVKITPRO})
-    switchcord_panic("Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>/devkitpro")
+    cmake_panic("Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>/devkitpro")
 endif ()
 
 set(CMAKE_SYSTEM_NAME Generic)
