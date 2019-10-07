@@ -103,6 +103,7 @@ endmacro()
 function(add_nso_target target)
     add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target}.nso
             COMMAND ${ELF2NSO} ${CMAKE_CURRENT_BINARY_DIR}/${target}.elf ${CMAKE_CURRENT_BINARY_DIR}/${target}.nso
+            DEPENDS ${target}.elf
             WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
             VERBATIM)
 
