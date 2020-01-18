@@ -7,12 +7,10 @@
 cmake_minimum_required(VERSION 3.1)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-include(options)
-include(utils)
 
 find_package(LIBNX REQUIRED)
 if (NOT LIBNX_FOUND)
-    cmake_panic("Unable to detect libnx on this system.")
+    message(FATAL_ERROR "Unable to detect libnx on this system.")
 endif ()
 
 # === The following 3 libs are required for cURL ===
@@ -71,7 +69,7 @@ endif ()
 
 include(nx-utils)
 
-cmake_info("Building ${APP_TITLE} version ${APP_VERSION}.")
+message(STATUS "Building ${APP_TITLE} version ${APP_VERSION}.")
 
 include(include/CMakeLists.txt)
 include(src/CMakeLists.txt)

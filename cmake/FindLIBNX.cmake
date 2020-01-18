@@ -7,7 +7,7 @@
 # It also adds an imported target named `switch::libnx`.
 
 if (NOT SWITCH)
-    cmake_panic("This helper can only be used if you are using the Switch toolchain file.")
+    message(FATAL_ERROR "This helper can only be used if you are using the Switch toolchain file.")
 endif ()
 
 set(LIBNX_PATHS $ENV{LIBNX} libnx ${LIBNX} ${DEVKITPRO}/libnx)
@@ -31,7 +31,6 @@ find_package_handle_standard_args(LIBNX DEFAULT_MSG
 mark_as_advanced(LIBNX_INCLUDE_DIR LIBNX_LIBRARY)
 if (LIBNX_FOUND)
     set(LIBNX ${LIBNX_INCLUDE_DIR}/..)
-    cmake_info("Setting LIBNX to ${LIBNX}")
 
     add_library(switch::libnx STATIC IMPORTED GLOBAL)
     set_target_properties(switch::libnx PROPERTIES

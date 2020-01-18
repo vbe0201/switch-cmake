@@ -7,7 +7,7 @@
 # It also adds an imported target named `switch::libtwili`.
 
 if (NOT SWITCH)
-    cmake_panic("This helper can only be used if you are using the Switch toolchain file.")
+    message(FATAL_ERROR "This helper can only be used if you are using the Switch toolchain file.")
 endif ()
 
 set(LIBTWILI_PATHS $ENV{LIBTWILI} libtwili ${LIBTWILI} ${PORTLIBS})
