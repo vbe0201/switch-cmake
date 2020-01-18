@@ -34,6 +34,7 @@ if(NOT IS_DIRECTORY ${DEVKITPRO})
 endif()
 
 set(DEVKITA64 "${DEVKITPRO}/devkitA64")
+set(LIBNX "${DEVKITPRO}/libnx")
 set(PORTLIBS "${DEVKITPRO}/portlibs/switch")
 
 # Add devkitA64 GCC tools to CMake.
