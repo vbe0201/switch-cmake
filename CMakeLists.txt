@@ -15,6 +15,29 @@ if (NOT LIBNX_FOUND)
     cmake_panic("Unable to detect libnx on this system.")
 endif ()
 
+# === The following 3 libs are required for cURL ===
+# === Add ${CURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${ZLIB_LIBRARIES} to target_link_libraries() before switch::libnx ===
+
+# find_package(CURL REQUIRED)
+# if (NOT CURL_FOUND)
+#     cmake_panic("Unable to detect libcurl on this system.")
+# endif ()
+# find_package(ZLIB REQUIRED)
+# if (NOT ZLIB_FOUND)
+#     cmake_panic("Unable to detect zlib on this system.")
+# endif ()
+# find_package(MbedTLS REQUIRED)
+# if (NOT MbedTLS_FOUND)
+#     cmake_panic("Unable to detect mbedtls on this system.")
+# endif ()
+
+# === Add switch::libtwili to target_link_libraries() to link with libtwili ===
+
+# find_package(LIBTWILI REQUIRED)
+# if (NOT LIBTWILI_FOUND)
+#     cmake_panic("Unable to detect libtwili on this system.")
+# endif ()
+
 include_directories(${PROJECT_BINARY_DIR})
 
 # Replace this with the name of your application
@@ -59,3 +82,5 @@ set_target_properties(${HOMEBREW_APP}.elf PROPERTIES
         LINK_FLAGS "-specs=${LIBNX}/switch.specs -Wl,-no-as-needed -Wl,-Map,.map")
 
 build_switch_binaries(${HOMEBREW_APP}.elf)
+# build_switch_sysmodule(${HOMEBREW_APP}.elf)  # build .kip
+# build_switch_nsp(${HOMEBREW_APP}.elf)  # build .nsp

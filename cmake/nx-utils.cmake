@@ -86,6 +86,18 @@ if (NOT NACPTOOL)
     endif ()
 endif ()
 
+################
+##  NPDMTOOL  ##
+################
+if (NOT NPDMTOOL)
+    find_program(NPDMTOOL npdmtool ${DEVKITPRO}/tools/bin)
+    if (NPDMTOOL)
+        cmake_info("npdmtool: ${NPDMTOOL} - found")
+    else ()
+        cmake_warning("npdmtool - not found")
+    endif ()
+endif ()
+
 macro(acquire_homebrew_icon target)
     # This basically imitates the behavior of the Makefiles
     # from the switchbrew/switch-examples repository.
@@ -98,6 +110,14 @@ macro(acquire_homebrew_icon target)
     else ()
         cmake_panic("No icon found, please provide one!")
     endif ()
+endmacro()
+
+macro(acquire_app_json target)
+    if (EXISTS ${PROJECT_SOURCE_DIR}/${target}.json)
+        set(APP_JSON ${PROJECT_SOURCE_DIR}/${target}.json)
+    elseif (EXISTS ${PROJECT_SOURCE_DIR}/config.json)
+        set(APP_JSON ${PROJECT_SOURCE_DIR}/config.json)
+    endif()
 endmacro()
 
 function(add_nso_target target)
@@ -121,6 +141,64 @@ function(add_nacp target)
             COMMAND ${__NACP_COMMAND}
             WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
             VERBATIM)
+endfunction()
+
+function(add_npdm_target target)
+    if (NOT APP_JSON)
+        cmake_panic("APP_JSON was not found!")
+    endif()
+
+    set(__NPDM_COMMAND ${NPDMTOOL} ${APP_JSON} ${CMAKE_CURRENT_BINARY_DIR}/${target}.npdm)
+
+    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target}.npdm
+        COMMAND ${__NPDM_COMMAND}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+        VERBATIM)
+
+    if (CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+        add_custom_target(${target}.npdm ALL SOURCES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target}.npdm)
+    else ()
+        add_custom_target(${target}.npdm ALL SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${target}.npdm)
+    endif ()
+endfunction()
+
+function(add_kip_target target)
+    if (NOT APP_JSON)
+        cmake_panic("APP_JSON was not found!")
+    endif()
+
+    set(__KIP_COMMAND
+            ${ELF2KIP} $<TARGET_FILE:${target}.elf> ${APP_JSON} ${CMAKE_CURRENT_BINARY_DIR}/${target}.kip)
+
+    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target}.kip
+            COMMAND ${__KIP_COMMAND}
+            DEPENDS ${target}.elf
+            VERBATIM)
+
+    if (CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+        add_custom_target(${target}.kip ALL SOURCES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target}.kip)
+    else ()
+        add_custom_target(${target}.kip ALL SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${target}.kip)
+    endif ()
+endfunction()
+
+function(add_nsp_target target)
+    set(__PFS0_COMMAND ${BUILD_PFS0} ${CMAKE_CURRENT_BINARY_DIR}/exefs ${CMAKE_CURRENT_BINARY_DIR}/${target}.nsp)
+
+    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target}.nsp
+            PRE_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/exefs
+            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/${target}.nso ${CMAKE_CURRENT_BINARY_DIR}/exefs/main
+            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/${target}.npdm ${CMAKE_CURRENT_BINARY_DIR}/exefs/main.npdm
+            COMMAND ${__PFS0_COMMAND}
+            DEPENDS ${target}.elf ${target}.npdm ${target}.nso
+            VERBATIM)
+
+    if (CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+        add_custom_target(${target}.nsp ALL SOURCES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target}.nsp)
+    else ()
+        add_custom_target(${target}.nsp ALL SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${target}.nsp)
+    endif ()
 endfunction()
 
 function(add_nro_target target)
@@ -182,3 +260,26 @@ function(build_switch_binaries target)
     add_nso_target(${target_we})
     add_nro_target(${target_we})
 endfunction()
+
+function (build_switch_nsp target)
+    get_filename_component(target_we ${target} NAME_WE)
+
+    if (NOT APP_JSON)
+        acquire_app_json(${target_we})
+    endif()
+
+    add_nso_target(${target_we})
+    add_npdm_target(${target_we})
+    add_nsp_target(${target_we})
+endfunction()
+
+function (build_switch_sysmodule target)
+    get_filename_component(target_we ${target} NAME_WE)
+
+    if (NOT APP_JSON)
+        acquire_app_json(${target_we})
+    endif()
+
+    add_kip_target(${target_we})
+endfunction()
+
