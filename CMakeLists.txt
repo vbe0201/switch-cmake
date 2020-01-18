@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.1)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-find_package(LIBNX REQUIRED)
+find_package(Libnx REQUIRED)
 if (NOT LIBNX_FOUND)
     message(FATAL_ERROR "Unable to detect libnx on this system.")
 endif ()
