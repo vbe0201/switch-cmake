@@ -1,63 +1,101 @@
-if (NOT DEFINED ENV{DEVKITPRO})
-    message(FATAL_ERROR "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>/devkitpro")
-endif ()
+## Toolchain file for Nintendo Switch homebrew.
 
-set(CMAKE_SYSTEM_NAME Generic)
-set(CMAKE_SYSTEM_PROCESSOR aarch64)
-set(SWITCH TRUE) # To be used for multiplatform projects
+## Generic settings
 
-# devkitPro paths are broken on Windows. We need to use this macro to fix those.
-macro(msys_to_cmake_path msys_path resulting_path)
-    if (WIN32)
-        string(REGEX REPLACE "^/([a-zA-Z])/" "\\1:/" ${resulting_path} ${msys_path})
-    else ()
-        set(${resulting_path} ${msys_path})
-    endif ()
+set(CMAKE_SYSTEM_NAME "Generic")
+set(CMAKE_SYSTEM_VERSION "DKA-NX-14")
+set(CMAKE_SYSTEM_PROCESSOR "aarch64")
+
+# If you're doing multiplatform builds, use this variable to check
+# whether you're building for the Switch.
+# A macro of the same name is defined as well, to be used within code.
+set(SWITCH TRUE)
+
+## devkitPro ecosystem settings
+
+## A macro to normalize MSYS paths to CMake paths.
+## MSYS is used by devkitPro to provide a development environment for Windows,
+## this macro is needed to deal with devkitPro environment variables which
+## contain paths in a format that isn't recognized by CMake.
+macro(msys_to_cmake_path msys_path result)
+    if(WIN32)
+        # We need to fix the path.
+        string(REGEX REPLACE "^/([a-zA-Z])/" "\\1:/" ${result} "${msys_path}")
+    else()
+        # We're not on Windows, paths are fine.
+        set(${result} "${msys_path}")
+    endif()
 endmacro()
 
-msys_to_cmake_path($ENV{DEVKITPRO} DEVKITPRO)
-set(DEVKITA64 ${DEVKITPRO}/devkitA64)
-set(LIBNX ${DEVKITPRO}/libnx)
-set(PORTLIBS_PATH ${DEVKITPRO}/portlibs)
-set(PORTLIBS ${PORTLIBS_PATH}/switch)
+# Define a few important devkitPro system paths.
+msys_to_cmake_path("$ENV{DEVKITPRO}" DEVKITPRO)
+if(NOT IS_DIRECTORY ${DEVKITPRO})
+    message(FATAL_ERROR "Please install devkitA64 or set DEVKITPRO in your environment.")
+endif()
 
-set(TOOLCHAIN_PREFIX ${DEVKITA64}/bin/aarch64-none-elf-)
-if (WIN32)
-    set(TOOLCHAIN_SUFFIX ".exe")
-else ()
-    set(TOOLCHAIN_SUFFIX "")
-endif ()
+set(DEVKITA64 "${DEVKITPRO}/devkitA64")
+set(PORTLIBS "${DEVKITPRO}/portlibs/switch")
 
-set(CMAKE_C_COMPILER ${TOOLCHAIN_PREFIX}gcc${TOOLCHAIN_SUFFIX})
-set(CMAKE_CXX_COMPILER ${TOOLCHAIN_PREFIX}g++${TOOLCHAIN_SUFFIX})
-set(CMAKE_ASM_COMPILER ${TOOLCHAIN_PREFIX}as${TOOLCHAIN_SUFFIX})
+# Add devkitA64 GCC tools to CMake.
+if(WIN32)
+    set(CMAKE_C_COMPILER "${DEVKITA64}/bin/aarch64-none-elf-gcc.exe")
+    set(CMAKE_CXX_COMPILER "${DEVKITA64}/bin/aarch64-none-elf-g++.exe")
+    set(CMAKE_LINKER "${DEVKITA64}/bin/aarch64-none-elf-ld.exe")
+    set(CMAKE_AR "${DEVKITA64}/bin/aarch64-none-elf-gcc-ar.exe" CACHE STRING "")
+    set(CMAKE_AS "${DEVKITA64}/bin/aarch64-none-elf-as.exe" CACHE STRING "")
+    set(CMAKE_NM "${DEVKITA64}/bin/aarch64-none-elf-gcc-nm.exe" CACHE STRING "")
+    set(CMAKE_RANLIB "${DEVKITA64}/bin/aarch64-none-elf-gcc-ranlib.exe" CACHE STRING "")
+else()
+    set(CMAKE_C_COMPILER "${DEVKITA64}/bin/aarch64-none-elf-gcc")
+    set(CMAKE_CXX_COMPILER "${DEVKITA64}/bin/aarch64-none-elf-g++")
+    set(CMAKE_LINKER "${DEVKITA64}/bin/aarch64-none-elf-ld")
+    set(CMAKE_AR "${DEVKITA64}/bin/aarch64-none-elf-gcc-ar" CACHE STRING "")
+    set(CMAKE_AS "${DEVKITA64}/bin/aarch64-none-elf-as" CACHE STRING "")
+    set(CMAKE_NM "${DEVKITA64}/bin/aarch64-none-elf-gcc-nm" CACHE STRING "")
+    set(CMAKE_RANLIB "${DEVKITA64}/bin/aarch64-none-elf-gcc-ranlib" CACHE STRING "")
+endif()
 
-set(PKG_CONFIG_EXECUTABLE ${TOOLCHAIN_PREFIX}pkg-config${TOOLCHAIN_SUFFIX})
-set(CMAKE_AR ${TOOLCHAIN_PREFIX}gcc-ar${TOOLCHAIN_SUFFIX} CACHE STRING "")
-set(CMAKE_RANLIB ${TOOLCHAIN_PREFIX}gcc-ranlib${TOOLCHAIN_SUFFIX} CACHE STRING "")
-set(CMAKE_LD "/${TOOLCHAIN_PREFIX}ld${TOOLCHAIN_SUFFIX}" CACHE INTERNAL "")
-set(CMAKE_OBJCOPY "${TOOLCHAIN_PREFIX}objcopy${TOOLCHAIN_SUFFIX}" CACHE INTERNAL "")
-set(CMAKE_SIZE_UTIL "${TOOLCHAIN_PREFIX}size${TOOLCHAIN_SUFFIX}" CACHE INTERNAL "")
+# devkitPro and devkitA64 provide various tools for working with
+# Switch file formats, which should be made accessible from CMake.
+list(APPEND CMAKE_PROGRAM_PATH "${DEVKITPRO}/tools/bin")
+list(APPEND CMAKE_PROGRAM_PATH "${DEVKITA64}/bin")
 
-set(WITH_PORTLIBS ON CACHE BOOL "use portlibs ?")
-if (WITH_PORTLIBS)
-    set(CMAKE_FIND_ROOT_PATH ${DEVKITA64} ${DEVKITPRO} ${LIBNX} ${PORTLIBS})
-else ()
-    set(CMAKE_FIND_ROOT_PATH ${DEVKITA64} ${DEVKITPRO} ${LIBNX})
-endif ()
+# devkitPro maintains a repository of so-called portlibs,
+# which can be found at https://github.com/devkitPro/pacman-packages/tree/master/switch.
+# They store PKGBUILDs and patches for various libraries
+# so they can be cross-compiled and used within homebrew.
+# These can be installed with (dkp-)pacman.
+set(WITH_PORTLIBS ON CACHE BOOL "Use portlibs?")
+
+## Cross-compilation settings
+
+if(WITH_PORTLIBS)
+    set(CMAKE_FIND_ROOT_PATH ${DEVKITPRO} ${DEVKITA64} ${PORTLIBS})
+else()
+    set(CMAKE_FIND_ROOT_PATH ${DEVKITPRO} ${DEVKITA64})
+endif()
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 
-add_definitions(-D__SWITCH__)
-set(ARCH "-march=armv8-a -mtune=cortex-a57 -mtp=soft -fPIE")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -MMD -MP -g -Wall -O2 -ffunction-sections ${ARCH}")
-set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS} -fno-rtti -fno-exceptions")
-set(CMAKE_EXE_LINKER_FLAGS_INIT "${ARCH} -ftls-model=local-exec -L${LIBNX}/lib -L${PORTLIBS}/lib")
-set(CMAKE_MODULE_LINKER_FLAGS_INIT ${CMAKE_EXE_LINKER_FLAGS_INIT})
+set(CMAKE_INSTALL_PREFIX ${PORTLIBS} CACHE PATH "Install libraries to the portlibs directory")
+set(CMAKE_PREFIX_PATH ${PORTLIBS} CACHE PATH "Find libraries in the portlibs directory")
 
-set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "Shared libs not available")
-set(CMAKE_INSTALL_PREFIX ${PORTLIBS})
-set(CMAKE_PREFIX_PATH ${PORTLIBS})
+## Options for code generation
+
+# Technically, the Switch does support shared libraries, but the toolchain doesn't.
+set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS FALSE)
+
+add_definitions(-DSWITCH -D__SWITCH__)
+
+set(ARCH "-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -O2 -ffunction-sections ${ARCH}" CACHE STRING "C flags")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS} -fno-rtti -fno-exceptions" CACHE STRING "C++ flags")
+set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} -x assembler-with-cpp ${ARCH}" CACHE STRING "ASM flags")
+# These flags are purposefully empty to use the default flags when invoking the
+# devkitA64 linker. Otherwise the linker may complain about duplicate flags.
+set(CMAKE_EXE_LINKER_FLAGS "" CACHE STRING "Executable linker flags")
+set(CMAKE_STATIC_LINKER_FLAGS "" CACHE STRING "Library linker flags")
+set(CMAKE_MODULE_LINKER_FLAGS "" CACHE STRING "Module linker flags")
