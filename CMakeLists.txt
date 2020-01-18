@@ -67,7 +67,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     include(clang-utils)
 endif ()
 
-include(nx-utils)
+include(SwitchTools)
 
 message(STATUS "Building ${APP_TITLE} version ${APP_VERSION}.")
 
