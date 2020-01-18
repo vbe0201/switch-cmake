@@ -1,285 +1,347 @@
-if (NOT SWITCH)
-    message(FATAL_ERROR "These utils can only be used if you are using the Switch toolchain file.")
-endif ()
+if(NOT SWITCH)
+    message(FATAL_ERROR "This helper can only be used when cross-compiling for the Switch")
+endif()
 
-#############
-## ELF2NRO ##
-#############
-if (NOT ELF2NRO)
-    find_program(ELF2NRO elf2nro ${DEVKITPRO}/tools/bin)
-    if (ELF2NRO)
-        message(STATUS "elf2nro: ${ELF2NRO} - found")
-    else ()
-        message(WARNING "elf2nro - not found")
-    endif ()
-endif ()
-
-#############
-## ELF2KIP ##
-#############
-if (NOT ELF2KIP)
-    find_program(ELF2KIP elf2kip ${DEVKITPRO}/tools/bin)
-    if (ELF2KIP)
-        message(STATUS "elf2kip: ${ELF2KIP} - found")
-    else ()
-        message(WARNING "elf2kip - not found")
-    endif ()
-endif ()
-
-#############
-## ELF2NSO ##
-#############
-if (NOT ELF2NSO)
-    find_program(ELF2NSO elf2nso ${DEVKITPRO}/tools/bin)
-    if (ELF2NSO)
-        message(STATUS "elf2nso: ${ELF2NSO} - found")
-    else ()
-        message(WARNING "elf2nso - not found")
-    endif ()
-endif ()
-
-#############
-##  BIN2S  ##
-#############
-if (NOT BIN2S)
-    find_program(BIN2S bin2s ${DEVKITPRO}/tools/bin)
-    if (BIN2S)
-        message(STATUS "bin2s: ${BIN2S} - found")
-    else ()
-        message(WARNING "bin2s - not found")
-    endif ()
-endif ()
-
-#############
-##  RAW2C  ##
-#############
-if (NOT RAW2C)
-    find_program(RAW2C raw2c ${DEVKITPRO}/tools/bin)
-    if (RAW2C)
-        message(STATUS "raw2c: ${RAW2C} - found")
-    else ()
-        message(WARNING "raw2c - not found")
-    endif ()
-endif ()
-
-##################
-##  BUILD_PFS0  ##
-##################
-if (NOT BUILD_PFS0)
-    find_program(BUILD_PFS0 build_pfs0 ${DEVKITPRO}/tools/bin)
-    if (BUILD_PFS0)
-        message(STATUS "build_pfs0: ${BUILD_PFS0} - found")
-    else ()
-        message(WARNING "build_pfs0 - not found")
-    endif ()
-endif ()
-
-################
-##  NACPTOOL  ##
-################
-if (NOT NACPTOOL)
-    find_program(NACPTOOL nacptool ${DEVKITPRO}/tools/bin)
-    if (NACPTOOL)
-        message(STATUS "nacptool: ${NACPTOOL} - found")
-    else ()
-        message(WARNING "nacptool - not found")
-    endif ()
-endif ()
-
-################
-##  NPDMTOOL  ##
-################
-if (NOT NPDMTOOL)
-    find_program(NPDMTOOL npdmtool ${DEVKITPRO}/tools/bin)
-    if (NPDMTOOL)
-        message(STATUS "npdmtool: ${NPDMTOOL} - found")
-    else ()
-        message(WARNING "npdmtool - not found")
-    endif ()
-endif ()
-
-macro(acquire_homebrew_icon target)
-    # This basically imitates the behavior of the Makefiles
-    # from the switchbrew/switch-examples repository.
-    if (EXISTS ${target}.jpg)
-        set(APP_ICON ${target}.jpg)
-    elseif (EXISTS ${PROJECT_SOURCE_DIR}/assets/icon.jpg)
-        set(APP_ICON ${PROJECT_SOURCE_DIR}/assets/icon.jpg)
-    elseif (LIBNX)
-        set(APP_ICON ${LIBNX}/default_icon.jpg)
-    else ()
-        message(FATAL_ERROR "No icon found, please provide one!")
-    endif ()
-endmacro()
-
-macro(acquire_app_json target)
-    if (EXISTS ${PROJECT_SOURCE_DIR}/${target}.json)
-        set(APP_JSON ${PROJECT_SOURCE_DIR}/${target}.json)
-    elseif (EXISTS ${PROJECT_SOURCE_DIR}/config.json)
-        set(APP_JSON ${PROJECT_SOURCE_DIR}/config.json)
+## A macro to find tools that come with devkitPro which are
+## used for working with Switch file formats.
+macro(find_tool tool)
+    if(NOT ${tool})
+        find_program(${tool} ${tool})
+        if (${tool})
+            message(STATUS "${tool} - found")
+        else()
+            message(WARNING "${tool} - not found")
+        endif()
     endif()
 endmacro()
 
-function(add_nso_target target)
-    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target}.nso
-            COMMAND ${ELF2NSO} ${CMAKE_CURRENT_BINARY_DIR}/${target}.elf ${CMAKE_CURRENT_BINARY_DIR}/${target}.nso
-            DEPENDS ${target}.elf
-            WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-            VERBATIM)
+## elf2kip
+find_tool(elf2kip)
 
-    if (CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-        add_custom_target(${target}.nso ALL SOURCES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target}.nso)
-    else ()
-        add_custom_target(${target}.nso ALL SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${target}.nso)
-    endif ()
-endfunction()
+## elf2nro
+find_tool(elf2nro)
 
-function(add_nacp target)
-    set(__NACP_COMMAND ${NACPTOOL} --create ${APP_TITLE} ${APP_AUTHOR} ${APP_VERSION} ${CMAKE_CURRENT_BINARY_DIR}/${target})
+## elf2nso
+find_tool(elf2nso)
 
-    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target}
-            COMMAND ${__NACP_COMMAND}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-            VERBATIM)
-endfunction()
+## nacptool
+find_tool(nacptool)
 
-function(add_npdm_target target)
-    if (NOT APP_JSON)
-        cmake_panic("APP_JSON was not found!")
+## npdmtool
+find_tool(npdmtool)
+
+## nxlink
+find_tool(nxlink)
+
+## build_pfs0
+find_tool(build_pfs0)
+
+## build_romfs
+find_tool(build_romfs)
+
+## A macro to set the title of the application.
+## if `title` is empty, the title will be set
+## to the value of `CMAKE_PROJECT_NAME`.
+macro(set_app_title title)
+    if("${title}" STREQUAL "title-NOTFOUND")
+        set(__HOMEBREW_APP_TITLE "${CMAKE_PROJECT_NAME}")
+        message(WARNING "The title of the application is unspecified")
+    else()
+        set(__HOMEBREW_APP_TITLE ${title})
+    endif()
+endmacro()
+
+## A macro to set the author of the application.
+## If `author` is empty, the author will be set
+## to "Unspecified author".
+macro(set_app_author author)
+    if("${author}" STREQUAL "author-NOTFOUND")
+        set(__HOMEBREW_APP_AUTHOR "Unspecified author")
+        message(WARNING "The author of the application is unspecified")
+    else()
+        set(__HOMEBREW_APP_AUTHOR ${author})
+    endif()
+endmacro()
+
+## A macro to set the version of the application.
+## If `version` is empty, the version will be set
+## to "1.0.0".
+macro(set_app_version version)
+    if("${version}" STREQUAL "version-NOTFOUND")
+        set(__HOMEBREW_APP_VERSION "1.0.0")
+        message(WARNING "The version of the application is unspecified")
+    else()
+        set(__HOMEBREW_APP_VERSION ${version})
+    endif()
+endmacro()
+
+## A macro to resolve the icon for the homebrew application.
+## If an icon was given, it will check for its existence and
+## use it.
+##
+## If the icon doesn't exist, the project root will be checked
+## for an icon.jpg that can be used. Otherwise, libnx/default_icon.jpg
+## will be acquired. If that doesn't exist as well, no icon will be used.
+##
+## No icon will be resolved, if a variable called `NO_ICON` is set to
+## anything.
+macro(set_app_icon file)
+    if(NOT NO_ICON)
+        if(EXISTS ${file})
+            set(__HOMEBREW_ICON ${file})
+        elseif(EXISTS ${PROJECT_SOURCE_DIR}/icon.jpg)
+            set(__HOMEBREW_ICON ${PROJECT_SOURCE_DIR}/icon.jpg)
+        elseif(LIBNX)
+            set(__HOMEBREW_ICON ${LIBNX}/default_icon.jpg)
+        else()
+            # Purposefully don't set `__HOMEBREW_ICON` to anything.
+            message(WARNING "Failed to resolve application icon")
+        endif()
+    endif()
+endmacro()
+
+## A macro to specify the NPDM JSON configuration for a system module.
+## If a path was given, it will validate it and use the file.
+## If the file doesn't exist, the project root will be checked for an
+## config.json that can be used.
+macro(set_app_json file)
+    if(EXISTS ${file})
+        set(__HOMEBREW_JSON_CONFIG ${file})
+    elseif(EXISTS ${PROJECT_SOURCE_DIR}/config.json)
+        set(__HOMEBREW_JSON_CONFIG ${PROJECT_SOURCE_DIR}/config.json)
+    else()
+        # Purposefully don't set `__HOMEBREW_JSON_CONFIG` to anything.
+        message(WARNING "Failed to resolve the JSON config")
+    endif()
+endmacro()
+
+## Generates a .nacp file from a given target.
+##
+## NACPs hold various application metadata, such as author or version,
+## which get embedded into Nintendo Relocatable Object (.nro) files.
+##
+## It tries to extract `APP_TITLE`, `APP_AUTHOR`, `APP_VERSION` and
+## `TITLE_ID` properties from the supplied target, all of them are
+## however optional.
+function(__generate_nacp target)
+    get_filename_component(target_we ${target} NAME_WE)
+
+    # Extract and validate metadata from the target.
+    get_target_property(title ${target} "APP_TITLE")
+    get_target_property(author ${target} "APP_AUTHOR")
+    get_target_property(version ${target} "APP_VERSION")
+    get_target_property(title_id ${target} "TITLE_ID")
+
+    set_app_title(${title})
+    set_app_author(${author})
+    set_app_version(${version})
+
+    # Title ID is mostly irrelevant, that's why it has no
+    # special definition routine and is only parsed here.
+    if(NOT "${title_id}" STREQUAL "")
+        set(NACPFLAGS "--titleid=\"${title_id}\"")
+    else()
+        set(NACPFLAGS "")  # Purposefully empty.
     endif()
 
-    set(__NPDM_COMMAND ${NPDMTOOL} ${APP_JSON} ${CMAKE_CURRENT_BINARY_DIR}/${target}.npdm)
-
-    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target}.npdm
-        COMMAND ${__NPDM_COMMAND}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-        VERBATIM)
-
-    if (CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-        add_custom_target(${target}.npdm ALL SOURCES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target}.npdm)
-    else ()
-        add_custom_target(${target}.npdm ALL SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${target}.npdm)
-    endif ()
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nacp
+        COMMAND ${nacptool} --create \"${__HOMEBREW_APP_TITLE}\" \"${__HOMEBREW_APP_AUTHOR}\" \"${__HOMEBREW_APP_VERSION}\" ${target_we}.nacp ${NACPFLAGS}
+        DEPENDS ${target}
+        VERBATIM
+    )
 endfunction()
 
-function(add_kip_target target)
-    if (NOT APP_JSON)
-        cmake_panic("APP_JSON was not found!")
+## Generates a .npdm file from a given target.
+##
+## NPDMs are found in Switch ExeFS and contain various metadata,
+## related to how sysmodules get executed.
+##
+## It tries to extract a `CONFIG_JSON` property from the supplied
+## target, which is required to acquire all the configuration
+## mappings that are needed to construct the format.
+function(__generate_npdm target)
+    get_filename_component(target_we ${target} NAME_WE)
+
+    # Extract and validate metadata from the target.
+    get_target_property(config_json ${target} "CONFIG_JSON")
+
+    set_app_json(${config_json})
+
+    # The JSON configuration is crucial, we cannot continue without it.
+    if(NOT __HOMEBREW_JSON_CONFIG)
+        message(FATAL_ERROR "Cannot generate a NPDM file without the \"CONFIG_JSON\" property being set for the target")
     endif()
 
-    set(__KIP_COMMAND
-            ${ELF2KIP} $<TARGET_FILE:${target}.elf> ${APP_JSON} ${CMAKE_CURRENT_BINARY_DIR}/${target}.kip)
-
-    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target}.kip
-            COMMAND ${__KIP_COMMAND}
-            DEPENDS ${target}.elf
-            VERBATIM)
-
-    if (CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-        add_custom_target(${target}.kip ALL SOURCES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target}.kip)
-    else ()
-        add_custom_target(${target}.kip ALL SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${target}.kip)
-    endif ()
+    # Build the NPDM file.
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.npdm
+        COMMAND ${npdmtool} ${__HOMEBREW_JSON_CONFIG} ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.npdm
+        DEPENDS ${target} ${__HOMEBREW_JSON_CONFIG}
+        VERBATIM
+    )
 endfunction()
 
-function(add_nsp_target target)
-    set(__PFS0_COMMAND ${BUILD_PFS0} ${CMAKE_CURRENT_BINARY_DIR}/exefs ${CMAKE_CURRENT_BINARY_DIR}/${target}.nsp)
-
-    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target}.nsp
-            PRE_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/exefs
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/${target}.nso ${CMAKE_CURRENT_BINARY_DIR}/exefs/main
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/${target}.npdm ${CMAKE_CURRENT_BINARY_DIR}/exefs/main.npdm
-            COMMAND ${__PFS0_COMMAND}
-            DEPENDS ${target}.elf ${target}.npdm ${target}.nso
-            VERBATIM)
-
-    if (CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-        add_custom_target(${target}.nsp ALL SOURCES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target}.nsp)
-    else ()
-        add_custom_target(${target}.nsp ALL SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${target}.nsp)
-    endif ()
-endfunction()
-
+## Builds a .nro file from a given target.
+##
+## NROs are the main executable format for homebrew as they allow
+## embedding various metadata and a RomFS image.
+##
+## It tries to extract `ICON` and `ROMFS` properties from the
+## supplied target, these are however optional.
 function(add_nro_target target)
-    set(__NRO_COMMAND
-            ${ELF2NRO} $<TARGET_FILE:${target}.elf> ${CMAKE_CURRENT_BINARY_DIR}/${target}.nro --nacp=${CMAKE_CURRENT_BINARY_DIR}/${target}.nacp --icon=${APP_ICON})
-
-    if (NOT ${CMAKE_CURRENT_BINARY_DIR}/${target}.nacp)
-        add_nacp(${target}.nacp)
-    endif ()
-
-    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target}.nro
-            COMMAND ${__NRO_COMMAND}
-            DEPENDS ${target}.elf ${CMAKE_CURRENT_BINARY_DIR}/${target}.nacp
-            VERBATIM)
-
-    if (CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-        add_custom_target(${target}.nro ALL SOURCES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${target}.nro)
-    else ()
-        add_custom_target(${target}.nro ALL SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${target}.nro)
-    endif ()
-endfunction()
-
-function(build_switch_binaries target)
     get_filename_component(target_we ${target} NAME_WE)
 
-    if (NOT APP_TITLE)
-        if (${ARGC} GREATER 1)
-            set(APP_TITLE ${ARGV1})
-        else ()
-            set(APP_TITLE ${target_we})
-        endif ()
-    endif ()
+    # Extract metadata from the target.
+    get_target_property(icon ${target} "ICON")
+    get_target_property(romfs ${target} "ROMFS")
 
-    if (NOT APP_AUTHOR)
-        if (${ARGC} GREATER 2)
-            set(APP_AUTHOR ${ARGV2})
-        else ()
-            set(APP_AUTHOR "Unspecified Author")
-        endif ()
-    endif ()
+    set_app_icon(${icon})
 
-    if (NOT APP_ICON)
-        if (${ARGC} GREATER 4)
-            set(APP_ICON ${ARGV4})
-        else ()
-            acquire_homebrew_icon(${target_we})
-        endif ()
-    endif ()
+    # Construct the `NROFLAGS` to invoke elf2nro with.
+    set(NROFLAGS "")
 
-    if (NOT APP_VERSION)
-        if (${ARGC} GREATER 3)
-            set(APP_VERSION ${ARGV3})
-        else ()
-            set(APP_VERSION "1.0.0")
-        endif ()
-    endif ()
-
-    # Build the binaries
-    add_nso_target(${target_we})
-    add_nro_target(${target_we})
-endfunction()
-
-function (build_switch_nsp target)
-    get_filename_component(target_we ${target} NAME_WE)
-
-    if (NOT APP_JSON)
-        acquire_app_json(${target_we})
+    # Set icon for the NRO, if given.
+    if(__HOMEBREW_ICON)
+        string(APPEND ${NROFLAGS} "--icon=\"${__HOMEBREW_ICON}\"")
     endif()
 
-    add_nso_target(${target_we})
-    add_npdm_target(${target_we})
-    add_nsp_target(${target_we})
-endfunction()
-
-function (build_switch_sysmodule target)
-    get_filename_component(target_we ${target} NAME_WE)
-
-    if (NOT APP_JSON)
-        acquire_app_json(${target_we})
+    # Add RomFS to the NRO, if given.
+    if(NOT "${romfs}" STREQUAL "romfs-NOTFOUND")
+        if(IS_DIRECTORY ${romfs})
+            # RomFS is a directory, pass --romfsdir to
+            # elf2nro and let it build an image for us.
+            string(APPEND ${NROFLAGS} " --romfsdir=\"${romfs}\"")
+        else()
+            # A RomFS image was provided, which can be
+            # supplied to the --romfs flag.
+            if(EXISTS ${romfs})
+                string(APPEND ${NROFLAGS} " --romfs=\"${romfs}\"")
+            else()
+                message(WARNING "The provided RomFS image at ${romfs} doesn't exist")
+            endif()
+        endif()
     endif()
 
-    add_kip_target(${target_we})
+    # Build the NRO file.
+    if(NOT NO_NACP)
+        if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nacp)
+            __generate_nacp(${target})
+        endif()
+
+        add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nro
+            COMMAND ${elf2nro} $<TARGET_FILE:${target}> ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nro --nacp=${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nacp ${NROFLAGS}
+            DEPENDS ${target} ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nacp
+            VERBATIM
+        )
+    else()
+        message(STATUS "No .nacp file will be generated for ${target_we}.nro")
+
+        add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nro
+            COMMAND ${elf2nro} $<TARGET_FILE:${target}> ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nro ${NROFLAGS}
+            DEPENDS ${target}
+            VERBATIM
+        )
+    endif()
+
+    # Add the respective NRO target and set the required linker flags for the original target.
+    add_custom_target(${target_we}_nro ALL SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nro)
+    set_target_properties(${target} PROPERTIES LINK_FLAGS "-specs=${LIBNX}/switch.specs")
 endfunction()
 
+## Builds a .nso file from a given target.
+##
+## NSOs are the main executable format on the Switch, however
+## rarely used outside of NSPs where they represent an important
+## component of the ExeFS.
+function(add_nso_target target)
+    get_filename_component(target_we ${target} NAME_WE)
+
+    # Build the NSO file.
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nso
+        COMMAND ${elf2nso} $<TARGET_FILE:${target}> ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nso
+        DEPENDS ${target}
+        VERBATIM
+    )
+
+    # Add the respective NSO target and set the required linker flags for the original target.
+    add_custom_target(${target_we}_nso ALL SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nso)
+    set_target_properties(${target} PROPERTIES LINK_FLAGS "-specs=${LIBNX}/switch.specs")
+endfunction()
+
+## Builds a .nsp file from a given target.
+##
+## NSPs is the file format for system modules, which run as
+## background processes.
+##
+## Building sysmodules depends on a .npdm file (see
+## `__generate_npdm`), and a .nso file (see `add_nso_target`),
+## so the supplied target needs to fulfill the imposed
+## requirements of each of them.
+function(add_nsp_target target)
+    get_filename_component(target_we ${target} NAME_WE)
+
+    # Build a NPDM for the PFS0 ExeFS, if missing.
+    if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.npdm)
+        __generate_npdm(${target})
+    endif()
+
+    # Add the required NSO target, if not configured yet.
+    if(NOT TARGET ${target_we}_nso)
+        add_nso_target(${target})
+    endif()
+
+    # Build the NSP file.
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nsp
+        PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/exefs
+        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nso ${CMAKE_CURRENT_BINARY_DIR}/exefs/main
+        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.npdm ${CMAKE_CURRENT_BINARY_DIR}/exefs/main.npdm
+        COMMAND ${build_pfs0} ${CMAKE_CURRENT_BINARY_DIR}/exefs ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nsp
+        DEPENDS ${target} ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nso ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.npdm
+        VERBATIM
+    )
+
+    # Add the respective NSP target and set the required linker flags for the original target.
+    add_custom_target(${target_we}_nsp ALL SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nsp)
+    set_target_properties(${target} PROPERTIES LINK_FLAGS "-specs=${LIBNX}/switch.specs")
+endfunction()
+
+## Builds a .kip file from a given target.
+##
+## KIPs are initial processes that are loaded by
+## the kernel and generally are the first system
+## modules to run on the Switch.
+##
+## Building a KIP file depends on a JSON configuration,
+## similar to the one used for .npdm files (see
+## `__generate_npdm`).
+function(add_kip_target target)
+    get_filename_component(target_we ${target} NAME_WE)
+
+    # Extract and validate metadata from the target.
+    get_target_property(config_json ${target} "CONFIG_JSON")
+
+    set_app_json(${config_json})
+
+    # The JSON configuration is crucial, we cannot continue without it.
+    if(NOT __HOMEBREW_JSON_CONFIG)
+        message(FATAL_ERROR "Cannot generate a KIP file without the \"CONFIG_JSON\" property being set for the target")
+    endif()
+
+    # Build the KIP file.
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.kip
+        COMMAND ${elf2kip} $<TARGET_FILE:${target}> ${__HOMEBREW_JSON_CONFIG} ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.kip
+        DEPENDS ${target} ${__HOMEBREW_JSON_CONFIG}
+        VERBATIM
+    )
+
+    # Add the respective KIP target and set the required linker flags for the original target.
+    add_custom_target(${target_we}_kip ALL SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.kip)
+    set_target_properties(${target} PROPERTIES LINK_FLAGS "-specs=${LIBNX}/switch.specs")
+endfunction()

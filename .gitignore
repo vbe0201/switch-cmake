@@ -74,7 +74,9 @@ Makefile
 bin/
 *.nacp
 *.cbp
-*.pfs0
+*.kip
+*.nsp
+*.npdm
 *.nro
 *.nso
 
