@@ -1,4 +1,4 @@
-## Toolchain file for Nintendo Switch homebrew.
+## Toolchain file for Nintendo Switch homebrew with devkitA64 & libnx.
 
 ## Generic settings
 
