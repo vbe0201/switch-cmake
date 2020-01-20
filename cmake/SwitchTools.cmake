@@ -2,6 +2,9 @@ if(NOT SWITCH)
     message(FATAL_ERROR "This helper can only be used when cross-compiling for the Switch")
 endif()
 
+# The directory of this file, which is needed to generate bin2s header files.
+get_filename_component(__SWITCH_TOOLS_DIR ${CMAKE_CURRENT_LIST_FILE} PATH)
+
 ## A macro to find tools that come with devkitPro which are
 ## used for working with Switch file formats.
 macro(find_tool tool)
@@ -38,6 +41,9 @@ find_tool(build_pfs0)
 
 ## build_romfs
 find_tool(build_romfs)
+
+## bin2s
+find_tool(bin2s)
 
 ## A macro to set the title of the application.
 ## if `title` is empty, the title will be set
@@ -114,6 +120,61 @@ macro(set_app_json file)
         message(WARNING "Failed to resolve the JSON config")
     endif()
 endmacro()
+
+## Adds a binary library target with the supplied name.
+## The macro takes a variable amount of binary files
+## within ARGN and passes them to bin2s to create
+## a library target from binary files that can be linked.
+macro(__add_binary_library target)
+    if(NOT ${ARGC} GREATER 1)
+        message(FATAL_ERROR "No input files provided")
+    endif()
+
+    # Check if ASM is an enabled project language.
+    get_cmake_property(ENABLED_LANGUAGES ENABLED_LANGUAGES)
+    if(NOT ENABLED_LANGUAGES MATCHES ".*ASM.*")
+        message(FATAL_ERROR "To use this macro, call enable_language(ASM) first")
+    endif()
+
+    # Generate the bin2s header files.
+    foreach(__file ${ARGN})
+        # Extract and compose the file name for the header.
+        get_filename_component(__file_name ${__file} NAME)
+        string(REGEX REPLACE "^([0-9])" "_\\1" __BINARY_FILE ${__file_name})
+        string(REGEX REPLACE "[-./]" "_" __BINARY_FILE ${__BINARY_FILE})
+
+        # Generate the header.
+        configure_file(${__SWITCH_TOOLS_DIR}/bin2s_header.h.in ${CMAKE_CURRENT_BINARY_DIR}/bin2s_include/${__BINARY_FILE}.h)
+    endforeach()
+
+    # Build the Assembly file.
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin2s_lib)
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/bin2s_lib/${target}.s
+        COMMAND ${bin2s} ${ARGN} > ${CMAKE_CURRENT_BINARY_DIR}/bin2s_lib/${target}.s
+        DEPENDS ${ARGN}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+    )
+
+    # Add the respective library target.
+    add_library(${target} ${CMAKE_CURRENT_BINARY_DIR}/bin2s_lib/${target}.s)
+    target_include_directories(${target} INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/bin2s_include)
+endmacro()
+
+## Embeds binary files into a given target.
+## The function takes a variable amount of binary files
+## within ARGN, which will be passed to bin2s to create
+## a library target which will be linked against the
+## `target` argument.
+function(target_embed_binaries target)
+    if(NOT ${ARGC} GREATER 1)
+        message(FATAL_ERROR "No input files provided")
+    endif()
+
+    get_filename_component(__1st_bin_file ${ARGV1} NAME)
+    __add_binary_library(__${target}_embed_${__1st_bin_file} ${ARGN})
+    target_link_libraries(${target} __${target}_embed_${__1st_bin_file})
+endfunction()
 
 ## Generates a .nacp file from a given target.
 ##
