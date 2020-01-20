@@ -38,8 +38,8 @@ target_link_libraries(my_app switch::libnx)
 
 # Set these variables if you don't want to use an icon or
 # don't want `add_nro_target` to generate a .nacp file.
-#set(NO_ICON)
-#set(NO_NACP)
+#set(NO_ICON TRUE)
+#set(NO_NACP TRUE)
 
 # And finally we can add the actual binary (.nro) target.
 add_nro_target(my_app)
