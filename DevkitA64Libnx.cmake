@@ -13,22 +13,8 @@ set(SWITCH TRUE)
 
 ## devkitPro ecosystem settings
 
-## A macro to normalize MSYS paths to CMake paths.
-## MSYS is used by devkitPro to provide a development environment for Windows,
-## this macro is needed to deal with devkitPro environment variables which
-## contain paths in a format that isn't recognized by CMake.
-macro(msys_to_cmake_path msys_path result)
-    if(WIN32)
-        # We need to fix the path.
-        string(REGEX REPLACE "^/([a-zA-Z])/" "\\1:/" ${result} "${msys_path}")
-    else()
-        # We're not on Windows, paths are fine.
-        set(${result} "${msys_path}")
-    endif()
-endmacro()
-
 # Define a few important devkitPro system paths.
-msys_to_cmake_path("$ENV{DEVKITPRO}" DEVKITPRO)
+file(TO_CMAKE_PATH "$ENV{DEVKITPRO}" DEVKITPRO)
 if(NOT IS_DIRECTORY ${DEVKITPRO})
     message(FATAL_ERROR "Please install devkitA64 or set DEVKITPRO in your environment.")
 endif()
