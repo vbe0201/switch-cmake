@@ -264,7 +264,7 @@ function(add_nro_target target)
 
     # Set icon for the NRO, if given.
     if(__HOMEBREW_ICON)
-        string(APPEND ${NROFLAGS} "--icon=${__HOMEBREW_ICON}")
+        string(APPEND NROFLAGS "--icon=${__HOMEBREW_ICON}")
     endif()
 
     # Add RomFS to the NRO, if given.
@@ -272,12 +272,12 @@ function(add_nro_target target)
         if(IS_DIRECTORY ${romfs})
             # RomFS is a directory, pass --romfsdir to
             # elf2nro and let it build an image for us.
-            string(APPEND ${NROFLAGS} " --romfsdir=${romfs}")
+            string(APPEND NROFLAGS " --romfsdir=${romfs}")
         else()
             # A RomFS image was provided, which can be
             # supplied to the --romfs flag.
             if(EXISTS ${romfs})
-                string(APPEND ${NROFLAGS} " --romfs=${romfs}")
+                string(APPEND NROFLAGS " --romfs=${romfs}")
             else()
                 message(WARNING "The provided RomFS image at ${romfs} doesn't exist")
             endif()
