@@ -207,7 +207,7 @@ function(__generate_nacp target)
 
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nacp
-        COMMAND ${nacptool} --create \"${__HOMEBREW_APP_TITLE}\" \"${__HOMEBREW_APP_AUTHOR}\" \"${__HOMEBREW_APP_VERSION}\" ${target_we}.nacp ${NACPFLAGS}
+        COMMAND ${nacptool} --create ${__HOMEBREW_APP_TITLE} ${__HOMEBREW_APP_AUTHOR} ${__HOMEBREW_APP_VERSION} ${target_we}.nacp ${NACPFLAGS}
         DEPENDS ${target}
         VERBATIM
     )
