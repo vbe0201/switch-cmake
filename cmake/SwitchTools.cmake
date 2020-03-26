@@ -286,9 +286,7 @@ function(add_nro_target target)
 
     # Build the NRO file.
     if(NOT NO_NACP)
-        if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nacp)
-            __generate_nacp(${target})
-        endif()
+        __generate_nacp(${target})
 
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nro
