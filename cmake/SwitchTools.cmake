@@ -344,9 +344,7 @@ function(add_nsp_target target)
     get_filename_component(target_we ${target} NAME_WE)
 
     # Build a NPDM for the PFS0 ExeFS, if missing.
-    if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.npdm)
-        __generate_npdm(${target})
-    endif()
+    __generate_npdm(${target})
 
     # Add the required NSO target, if not configured yet.
     if(NOT TARGET ${target_we}_nso)
