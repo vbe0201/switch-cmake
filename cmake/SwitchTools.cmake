@@ -207,7 +207,7 @@ function(__generate_nacp target)
 
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nacp
-        COMMAND ${nacptool} --create \"${__HOMEBREW_APP_TITLE}\" \"${__HOMEBREW_APP_AUTHOR}\" \"${__HOMEBREW_APP_VERSION}\" ${target_we}.nacp ${NACPFLAGS}
+        COMMAND ${nacptool} --create ${__HOMEBREW_APP_TITLE} ${__HOMEBREW_APP_AUTHOR} ${__HOMEBREW_APP_VERSION} ${target_we}.nacp ${NACPFLAGS}
         DEPENDS ${target}
         VERBATIM
     )
@@ -264,7 +264,7 @@ function(add_nro_target target)
 
     # Set icon for the NRO, if given.
     if(__HOMEBREW_ICON)
-        string(APPEND ${NROFLAGS} "--icon=\"${__HOMEBREW_ICON}\"")
+        string(APPEND NROFLAGS "--icon=${__HOMEBREW_ICON}")
     endif()
 
     # Add RomFS to the NRO, if given.
@@ -272,12 +272,12 @@ function(add_nro_target target)
         if(IS_DIRECTORY ${romfs})
             # RomFS is a directory, pass --romfsdir to
             # elf2nro and let it build an image for us.
-            string(APPEND ${NROFLAGS} " --romfsdir=\"${romfs}\"")
+            string(APPEND NROFLAGS " --romfsdir=${romfs}")
         else()
             # A RomFS image was provided, which can be
             # supplied to the --romfs flag.
             if(EXISTS ${romfs})
-                string(APPEND ${NROFLAGS} " --romfs=\"${romfs}\"")
+                string(APPEND NROFLAGS " --romfs=${romfs}")
             else()
                 message(WARNING "The provided RomFS image at ${romfs} doesn't exist")
             endif()
@@ -286,9 +286,7 @@ function(add_nro_target target)
 
     # Build the NRO file.
     if(NOT NO_NACP)
-        if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nacp)
-            __generate_nacp(${target})
-        endif()
+        __generate_nacp(${target})
 
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.nro
@@ -346,9 +344,7 @@ function(add_nsp_target target)
     get_filename_component(target_we ${target} NAME_WE)
 
     # Build a NPDM for the PFS0 ExeFS, if missing.
-    if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.npdm)
-        __generate_npdm(${target})
-    endif()
+    __generate_npdm(${target})
 
     # Add the required NSO target, if not configured yet.
     if(NOT TARGET ${target_we}_nso)
