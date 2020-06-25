@@ -80,7 +80,7 @@ add_definitions(-DSWITCH -D__SWITCH__)
 set(ARCH "-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -O2 -ffunction-sections ${ARCH}" CACHE STRING "C flags")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS} -fno-rtti -fno-exceptions" CACHE STRING "C++ flags")
-set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} -x assembler-with-cpp ${ARCH}" CACHE STRING "ASM flags")
+set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} -g ${ARCH}" CACHE STRING "ASM flags")
 # These flags are purposefully empty to use the default flags when invoking the
 # devkitA64 linker. Otherwise the linker may complain about duplicate flags.
 set(CMAKE_EXE_LINKER_FLAGS "" CACHE STRING "Executable linker flags")
