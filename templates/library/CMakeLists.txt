@@ -1,12 +1,3 @@
-cmake_minimum_required(VERSION 3.1)
-
-## Declare project
-
-project(sysmodule)
-
-# We set the C standard to 11.
-set(CMAKE_C_STANDARD 11)
-
 ## Targets
 
 # First, we want to add the regular library target with our source files.
