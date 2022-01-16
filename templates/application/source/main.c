@@ -9,36 +9,43 @@
 // Main program entrypoint
 int main(int argc, char* argv[])
 {
-  // This example uses a text console, as a simple way to output text to the screen.
-  // If you want to write a software-rendered graphics application,
-  //   take a look at the graphics/simplegfx example, which uses the libnx Framebuffer API instead.
-  // If on the other hand you want to write an OpenGL based application,
-  //   take a look at the graphics/opengl set of examples, which uses EGL instead.
-  consoleInit(NULL);
+	// This example uses a text console, as a simple way to output text to the screen.
+	// If you want to write a software-rendered graphics application,
+	//   take a look at the graphics/simplegfx example, which uses the libnx Framebuffer API instead.
+	// If on the other hand you want to write an OpenGL based application,
+	//   take a look at the graphics/opengl set of examples, which uses EGL instead.
+	consoleInit(NULL);
 
-  // Other initialization goes here. As a demonstration, we print hello world.
-  printf("Hello World!\n");
+	// Configure our supported input layout: a single player with standard controller styles
+	padConfigureInput(1, HidNpadStyleSet_NpadStandard);
 
-  // Main loop
-  while (appletMainLoop())
-  {
-    // Scan all the inputs. This should be done once for each frame
-    hidScanInput();
+	// Initialize the default gamepad (which reads handheld mode inputs as well as the first connected controller)
+	PadState pad;
+	padInitializeDefault(&pad);
 
-    // hidKeysDown returns information about which buttons have been
-    // just pressed in this frame compared to the previous one
-    u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
+	// Other initialization goes here. As a demonstration, we print hello world.
+	printf("Hello World!\n");
 
-    if (kDown & KEY_PLUS)
-      break; // break in order to return to hbmenu
+	// Main loop
+	while (appletMainLoop())
+	{
+		// Scan the gamepad. This should be done once for each frame
+		padUpdate(&pad);
 
-    // Your code goes here
+		// padGetButtonsDown returns the set of buttons that have been
+		// newly pressed in this frame compared to the previous one
+		u64 kDown = padGetButtonsDown(&pad);
 
-    // Update the console, sending a new frame to the display
-    consoleUpdate(NULL);
-  }
+		if (kDown & HidNpadButton_Plus)
+			break; // break in order to return to hbmenu
 
-  // Deinitialize and clean up resources used by the console (important!)
-  consoleExit(NULL);
-  return 0;
+		// Your code goes here
+
+		// Update the console, sending a new frame to the display
+		consoleUpdate(NULL);
+	}
+
+	// Deinitialize and clean up resources used by the console (important!)
+	consoleExit(NULL);
+	return 0;
 }
