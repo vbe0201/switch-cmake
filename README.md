@@ -26,8 +26,8 @@ Extensible CMake toolchain for Nintendo Switch homebrew development with devkitA
 
 ## Introduction
 
-This project aims to provide a CMake toolchain for Nintendo Switch homebrew development with devkitA64 and libnx. It is
-intended as an alternative to the makefile-based system currently used with these tools. 
+This project aims to provide a CMake toolchain for Nintendo Switch homebrew development using devkitA64 and libnx. It is
+intended as an alternative to the makefile-based system currently provided with the tools. 
 
 ### Why CMake
 
@@ -86,13 +86,13 @@ On your Nintendo Switch, open the Gallery applet to start `hbmenu`, then press Y
 In the repository's root directory, run the following command to upload and run the executable:
 
 ```shell
-$ nxlink .\build\templates\application\my_app.nro
+$ nxlink ./build/templates/application/my_app.nro
 ```
 
 If `nxlink` fails with the message `No response from Switch!`, try supplying the Switch's IP address via the `-a <IP>` 
 argument.
 
-When the executable finishes uploading, you should see a `Hello World!` message in the top right of your Switch's 
+When the executable finishes uploading, you should see a `Hello World!` message in the top left of your Switch's 
 display.
 
 ## Switch Homebrew
