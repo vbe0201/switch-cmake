@@ -63,6 +63,14 @@ Next, have CMake configure the project and generate build files with:
 $ cmake -G "Unix Makefiles" --toolchain=DevkitA64Libnx.cmake -S . -B build
 ```
 
+The `-G "Unix Makefiles"` argument specifies which 
+[generator](https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html) CMake will use. In this case, CMake will
+output Makefiles when the project is built.
+
+The `--toolchain=DevkitA64Libnx.cmake` argument specifies which 
+[toolchain file](https://cmake.org/cmake/help/latest/manual/cmake-toolchains.7.html) CMake will use. This will configure
+CMake to use the DevkitPro environment and compilers.
+
 Finally, build the project with
 
 ```shell
